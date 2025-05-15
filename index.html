@@ -13,8 +13,8 @@
   <script src="user_study_text.js"></script>
   <link href="jspsych/jspsych.css" rel="stylesheet" type="text/css" />
 	<style>
-    video { width: 300px; margin: 10px; }
-    .video-container { display: flex; justify-content: center; }
+    video { width: 500px; margin: 3px; }
+    .video-container {  display: flex; justify-content: center; }
     .ranking-form { text-align: center; margin-top: 20px; }
   </style>
 </head>
@@ -27,8 +27,6 @@
 	var total_clips = 50;
 	var clips = Array.from({ length: total_clips }, (_, i) => i);
 	var models = ["style_gt", "mp", "smoodi", "ours"];
-	var model_ids_1 = ['A', 'C'];
-	var model_ids_2 = ['A', 'C'];
 
 	const participant_id = jsPsych.randomization.randomID(8);
 
@@ -77,8 +75,17 @@
 		jsPsych.endExperiment("Your data has been submitted. Thank you!");
 	}
 
+	// Shuffle using Fisher-Yates algorithm
+	for (let i = clips.length - 1; i > 0; i--) {
+		const j = Math.floor(Math.random() * (i + 1));
+		[clips[i], clips[j]] = [clips[j], clips[i]];
+	}
 
-	clips.forEach((clip_id, index) => {
+	// Retrieve a subset (e.g., first 10 shuffled clips)
+	var subset_size = 20;
+	var selected_clips = clips.slice(0, subset_size);
+
+	selected_clips.forEach((clip_id, index) => {
 		const model_order = models;
 		const top_video_html = `<div>
 			<strong>Style</strong>
@@ -100,10 +107,12 @@
 
 		const trial_1 = {
 			type: jsPsychSurveyHtmlForm,
-			preamble: `<h3> Sample ${clip_id+1}/${total_clips}, task 0/1: ${userStudyText[clip_id]}</h3>
-			${top_video_html}${bottom_videos_html_1}`,
+			preamble: `<h3> Sample ${index+1}/${subset_size}, task 0/1: ${userStudyText[clip_id]}</h3>`,
 			html: `
-				<p>Compare the following two models:</p>
+			${top_video_html}${bottom_videos_html_1}
+				<p>Compare the following two models or
+						<button type="button" id="skip-button" style="font-size: 16px;">Skip this comparison</button>
+				</p>
 				<div class="ranking-container" style="display: flex; flex-direction: column; justify-content: center; gap: 30px;">
 					${titles.map((title, i) => `
 						<div class="ranking-row" style="display: flex; align-items: center; border: 1px solid #ccc; padding: 10px; width: 600px;">
@@ -118,20 +127,37 @@
 							</div>
 						</div>
 					`).join("")}
+
+
 				</div>
 			`,
 			data: {
 				task: 'user_response',
 				clip_id: clip_id,
 				model: "MP",
+			},
+			on_load: () => {
+				document.getElementById('skip-button').addEventListener('click', () => {
+					jsPsych.finishTrial({ skipped: true });
+				});
+			},
+			on_finish: (data) => {
+				if (data.skipped) {
+					// Clean up so it's not treated as a valid user response
+					delete data.task;
+					delete data.clip_id;
+					delete data.model;
+				}
 			}
 		};
 		const trial_2 = {
 			type: jsPsychSurveyHtmlForm,
-			preamble: `<h3> Sample ${clip_id+1}/${total_clips}, task 1/1: ${userStudyText[clip_id]}</h3>
+			preamble: `<h3> Sample ${index+1}/${subset_size}, task 1/1: ${userStudyText[clip_id]}</h3>
 			${top_video_html}${bottom_videos_html_2}`,
 			html: `
-				<p>Compare the following two models, and choose the one you prefer:</p>
+				<p>Compare the following two models or
+						<button type="button" id="skip-button" style="font-size: 16px;">Skip this comparison</button>
+				</p>
 				<div class="ranking-container" style="display: flex; flex-direction: column; justify-content: center; gap: 30px;">
 					${titles.map((title, i) => `
 						<div class="ranking-row" style="display: flex; align-items: center; border: 1px solid #ccc; padding: 10px; width: 600px;">
@@ -152,6 +178,19 @@
 				task: 'user_response',
 				clip_id: clip_id,
 				model: "SMOODI",
+			},
+			on_load: () => {
+				document.getElementById('skip-button').addEventListener('click', () => {
+					jsPsych.finishTrial({ skipped: true });
+				});
+			},
+			on_finish: (data) => {
+				if (data.skipped) {
+					// Clean up so it's not treated as a valid user response
+					delete data.task;
+					delete data.clip_id;
+					delete data.model;
+				}
 			}
 		};
 
