@@ -30,6 +30,9 @@
 	var models = ["style_gt", "mp", "smoodi", "ours"];
 	var model_ids = ['A', 'B', 'C'];
 
+	const participant_id = jsPsych.randomization.randomID(8);
+
+
 	var timeline = [
   {
     type: jsPsychPreload,
@@ -96,6 +99,28 @@
 	});
 
 
+
+	timeline.push({
+		type: jsPsychHtmlButtonResponse,
+		stimulus: '<p>Thank you for participating!</p><p>Your data is being submitted...</p>',
+		choices: ['Finish'],
+		on_finish: function() {
+			const submissionURL = 'https://script.google.com/macros/s/AKfycbxYKVLrRzImimHl7FTD8Wa9EdssXpQcBvVoAyOvadKLKwwY4Ozc45AH20uG7AQwYeyJRg/exec';
+
+			const trial_data = jsPsych.data.get().filter({ task: "user_response" }).values();
+
+			fetch(submissionURL, {
+				method: 'POST',
+				mode: 'no-cors', // prevents blocking, but no response back
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({
+					participant_id: participant_id,
+					values: trial_data }),
+			});
+		}
+	});
 
 
 	jsPsych.run(timeline);
