@@ -6,12 +6,17 @@
   <script src="jspsych/jspsych.js"></script>
 	<script src="jspsych/plugin-html-keyboard-response.js"></script>
 	<script src="jspsych/plugin-image-keyboard-response.js"></script>
-  <!-- <script src="jspsych/plugin-html-button-response.js"></script> -->
-  <!-- <script src="jspsych/plugin-survey-html-form.js"></script> -->
+	<script src="jspsych/plugin-video-button-response.js"></script>
+  <script src="jspsych/plugin-html-button-response.js"></script>
+  <script src="jspsych/plugin-survey-html-form.js"></script>
   <script src="jspsych/plugin-preload.js"></script>
   <!-- <script src="trial_generator.js"></script> -->
   <link href="jspsych/jspsych.css" rel="stylesheet" type="text/css" />
-
+	<style>
+    video { width: 300px; margin: 10px; }
+    .video-container { display: flex; justify-content: center; }
+    .ranking-form { text-align: center; margin-top: 20px; }
+  </style>
 </head>
 <body></body>
 <script>
@@ -20,100 +25,77 @@
 			jsPsych.data.displayData();
 		}
 	});
-	var timeline = [];
 
-	var preload = {
-		type: jsPsychPreload,
-		images: ['img/blue.png', 'img/orange.png']
-	};
-	timeline.push(preload);
+	var clips = Array.from({ length: 2 }, (_, i) => i);
+	var models = ["style_gt", "mp", "smoodi", "ours"];
+	var model_ids = ['A', 'B', 'C'];
 
+	var timeline = [
+  {
+    type: jsPsychPreload,
+    video: clips.flatMap(clip => models.map(m => `stimuli/${m}_${clip}.mp4`))
+  }
+];
 
 	var welcome = {
 		type: jsPsychHtmlKeyboardResponse,
-		stimulus: "Welcome to the experiment. Press any key to begin."
+		stimulus:
+		`<h3> Animation User Study</h3>
+		<div>
+		<p>Welcome to the animation user study. You will be given a reference style motion on the leftmost, and a text description, the output motions are expected to match the reference style and also repect the semantic meaning of the text description. The output motions are generated using three different models, please rank them in terms of semantic preservation, style reflection and motion quality.</p><p> Press any key to begin.</p>
+		</div>`,
+		post_trial_gap: 2000
 	};
 	timeline.push(welcome);
 
 
-	var instructions = {
-		type: jsPsychHtmlKeyboardResponse,
-		stimulus: `
-			<p>In this experiment, a circle will appear in the center
-			of the screen.</p><p>If the circle is <strong>blue</strong>,
-			press the letter F on the keyboard as fast as you can.</p>
-			<p>If the circle is <strong>orange</strong>, press the letter J
-			as fast as you can.</p>
-			<div style='width: 700px;'>
-			<div style='float: left;'><img src='img/blue.png'></img>
-			<p class='small'><strong>Press the F key</strong></p></div>
-			<div style='float: right;'><img src='img/orange.png'></img>
-			<p class='small'><strong>Press the J key</strong></p></div>
-			</div>
-			<p>Press any key to begin.</p>
-		`,
-		post_trial_gap: 2000
-	};
-	timeline.push(instructions);
 
 
-	var test_stimuli = [
-		{ stimulus: "img/blue.png", correct_response: 'f'},
-		{ stimulus: "img/orange.png", correct_response: 'j'}
-	];
-
-	/* define fixation and test trials */
-	var fixation = {
-		type: jsPsychHtmlKeyboardResponse,
-		stimulus: '<div style="font-size:60px;">+</div>',
-		choices: "NO_KEYS",
-		trial_duration: function(){
-			return jsPsych.randomization.sampleWithoutReplacement([250, 500, 750, 1000, 1250, 1500, 1750, 2000], 1)[0];
-		},
-		data: {
-			task: 'fixation'
+	function shuffle(array) {
+		let a = array.slice();
+		for (let i = a.length - 1; i > 0; i--) {
+			const j = Math.floor(Math.random() * (i + 1));
+			[a[i], a[j]] = [a[j], a[i]];
 		}
-	};
+		return a;
+	}
 
-	var test = {
-		type: jsPsychImageKeyboardResponse,
-		stimulus: jsPsych.timelineVariable('stimulus'),
-		choices: ['f', 'j'],
-		data: {
-			task: 'response',
-			correct_response: jsPsych.timelineVariable('correct_response')
-		},
-		on_finish: function(data){
-			data.correct = jsPsych.pluginAPI.compareKeys(data.response, data.correct_response);
-		}
-	};
+	clips.forEach((clip_id, index) => {
+		const model_order = models;
+		const top_video_html = `<div><video controls autoplay muted loop><source src='stimuli/style_gt_${clip_id}.mp4' type='video/mp4'></video><p>Style reference</p></div>`;
+		const bottom_videos_html =
+			`
+			<div class='video-container'>
+			<div><video controls autoplay muted loop><source src='stimuli/mp_${clip_id}.mp4' type='video/mp4'></video><p>Model A</p></div>
+			<div><video controls autoplay muted loop><source src='stimuli/smoodi_${clip_id}.mp4' type='video/mp4'></video><p>Model B</p></div>
+			<div><video controls autoplay muted loop><source src='stimuli/ours_${clip_id}.mp4' type='video/mp4'></video><p>Model C</p></div>
+			</div>`;
 
-	/* define test procedure */
-	var test_procedure = {
-		timeline: [fixation, test],
-		timeline_variables: test_stimuli,
-		randomize_order: true,
-		repetitions: 2
-	};
-	timeline.push(test_procedure);
+		const trial = {
+			type: jsPsychSurveyHtmlForm,
+			preamble: `<h3> Video ${clip_id}</h3> ${top_video_html}${bottom_videos_html}`,
+			html: `
+				<div class='ranking-form'>
+					<p>Rank each model (1 = best, 3 = worst):</p>
+					${model_ids.map(m => `
+						<label>Model ${m}:
+							<input name="rank_${clip_id}_${m}" type="radio" value="1" required>1
+							<input name="rank_${clip_id}_${m}" type="radio" value="2">2
+							<input name="rank_${clip_id}_${m}" type="radio" value="3">3
+						</label><br>
+					`).join("")}
+				</div>
+			`,
+			data: {
+				task: 'user_response',
+				clip_id: clip_id,
+			}
+		};
+
+		timeline.push(trial);
+	});
 
 
-	var debrief_block = {
-		type: jsPsychHtmlKeyboardResponse,
-		stimulus: function() {
-
-			var trials = jsPsych.data.get().filter({task: 'response'});
-			var correct_trials = trials.filter({correct: true});
-			var accuracy = Math.round(correct_trials.count() / trials.count() * 100);
-			var rt = Math.round(correct_trials.select('rt').mean());
-
-			return `<p>You responded correctly on ${accuracy}% of the trials.</p>
-				<p>Your average response time was ${rt}ms.</p>
-				<p>Press any key to complete the experiment. Thank you!</p>`;
-
-		}
-	};
-	timeline.push(debrief_block);
 
 
 	jsPsych.run(timeline);
