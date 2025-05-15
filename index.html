@@ -24,7 +24,7 @@
 
 	});
 
-	var total_clips = 50;
+	var total_clips = 3;
 	var clips = Array.from({ length: total_clips }, (_, i) => i);
 	var models = ["style_gt", "mp", "smoodi", "ours"];
 	var model_ids_1 = ['A', 'C'];
@@ -100,20 +100,22 @@
 
 		const trial_1 = {
 			type: jsPsychSurveyHtmlForm,
-			preamble: `<h3> Sample ${clip_id+1}/${total_clips}: ${userStudyText[clip_id]}</h3>
+			preamble: `<h3> Sample ${clip_id+1}/${total_clips}, task 0/1: ${userStudyText[clip_id]}</h3>
 			${top_video_html}${bottom_videos_html_1}`,
 			html: `
 				<p>Compare the following two models:</p>
 				<div class="ranking-container" style="display: flex; flex-direction: column; justify-content: center; gap: 30px;">
 					${titles.map((title, i) => `
-						<div class="ranking-row" style="display: flex; align-items: center; border: 1px solid #ccc; padding: 10px; width: 400px;">
-							<div style="width: 100px; font-weight: bold;">${title}</div>
-								<label style="display: block; margin-bottom: 5px;">
-									<label style="margin-left: 30px;">
-										<input name="clip_${clip_id}_model_mp_q_${i}" type="radio" value="1" required> Left
-										<input name="clip_${clip_id}_model_mp_q_${i}" type="radio" value="2"> Right
-									</label>
+						<div class="ranking-row" style="display: flex; align-items: center; border: 1px solid #ccc; padding: 10px; width: 600px;">
+							<div style="width: 200px; font-weight: bold;">${title}</div>
+							<div style="display: flex; gap: 20px;">
+								<label style="font-size: 18px; display: flex; align-items: center; gap: 8px;">
+									<input style="transform: scale(1.5);" name="clip_${clip_id}_model_mp_q_${i}" type="radio" value="0" required> Left
 								</label>
+								<label style="font-size: 18px; display: flex; align-items: center; gap: 8px;">
+									<input style="transform: scale(1.5);" name="clip_${clip_id}_model_mp_q_${i}" type="radio" value="1"> Right
+								</label>
+							</div>
 						</div>
 					`).join("")}
 				</div>
@@ -126,20 +128,22 @@
 		};
 		const trial_2 = {
 			type: jsPsychSurveyHtmlForm,
-			preamble: `<h3> Sample ${clip_id+1}/${total_clips}: ${userStudyText[clip_id]}</h3>
+			preamble: `<h3> Sample ${clip_id+1}/${total_clips}, task 1/1: ${userStudyText[clip_id]}</h3>
 			${top_video_html}${bottom_videos_html_2}`,
 			html: `
 				<p>Compare the following two models, and choose the one you prefer:</p>
 				<div class="ranking-container" style="display: flex; flex-direction: column; justify-content: center; gap: 30px;">
 					${titles.map((title, i) => `
-						<div class="ranking-row" style="display: flex; align-items: center; border: 1px solid #ccc; padding: 10px; width: 400px;">
-							<div style="width: 100px; font-weight: bold;">${title}</div>
-								<label style="display: block; margin-bottom: 5px;">
-									<label style="margin-left: 30px;">
-										<input name="clip_${clip_id}_model_smoodi_q_${i}" type="radio" value="1" required> Left
-										<input name="clip_${clip_id}_model_smoodi_q_${i}" type="radio" value="2"> Right
-									</label>
+						<div class="ranking-row" style="display: flex; align-items: center; border: 1px solid #ccc; padding: 10px; width: 600px;">
+							<div style="width: 200px; font-weight: bold;">${title}</div>
+							<div style="display: flex; gap: 20px;">
+								<label style="font-size: 18px; display: flex; align-items: center; gap: 8px;">
+									<input style="transform: scale(1.5);" name="clip_${clip_id}_model_smoodi_q_${i}" type="radio" value="0" required> Left
 								</label>
+								<label style="font-size: 18px; display: flex; align-items: center; gap: 8px;">
+									<input style="transform: scale(1.5);" name="clip_${clip_id}_model_smoodi_q_${i}" type="radio" value="1"> Right
+								</label>
+							</div>
 						</div>
 					`).join("")}
 				</div>
