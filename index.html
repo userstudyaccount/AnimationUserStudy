@@ -111,7 +111,7 @@
 
 		const trial_1 = {
 			type: jsPsychSurveyHtmlForm,
-			preamble: `<h3> Sample ${index+1}/${subset_size}, task 0/1: ${userStudyText[clip_id]}</h3>`,
+			preamble: `<h3>(Sample ${2*index+1}/${2*subset_size}): ${userStudyText[clip_id]}</h3>`,
 			html: `
 			${top_video_html}${bottom_videos_html_1}
 				<p>Compare the following two models or if you cannot decide:
@@ -161,7 +161,7 @@
 		};
 		const trial_2 = {
 			type: jsPsychSurveyHtmlForm,
-			preamble: `<h3> Sample ${index+1}/${subset_size}, task 1/1: ${userStudyText[clip_id]}</h3>
+			preamble: `<h3> Sample ${2*index+2}/${2*subset_size}): ${userStudyText[clip_id]}</h3>
 			${top_video_html}${bottom_videos_html_2}`,
 			html: `
 				<p>Compare the following two models or if you cannot decide:
@@ -212,12 +212,20 @@
 	});
 
 
-
+	jsPsych.data.addProperties({ participant_id });
 	timeline.push({
 		type: jsPsychHtmlButtonResponse,
-		stimulus: '<p>Thank you for participating!</p><p>Your data is being submitted...</p>',
+		stimulus: `
+		<p>Thank you for participating!</p><p>Your data is being submitted...</p>
+		<p><strong>Your completion code is:</strong></p>
+		<p style="font-size: 24px; color: red;"><strong>${participant_id}</strong></p>
+		<p>Please copy and paste this code into the HIT page to receive credit.</p>
+		`,
 		choices: ['Finish'],
-		on_finish: submitDataAndEndExperiment
+		on_finish: submitDataAndEndExperiment,
+		on_load: () => {
+			setTimeout(() => jsPsych.finishTrial(), 30000); // auto-finish after 30s
+		}
 	});
 
 
